@@ -1,0 +1,11 @@
+{
+  "name": "keue",
+  "version": "0.0.1",
+  "description": "Dead simple asynchronous function queue",
+  "keywords": [ "queue", "asynchronous", "function", "functions", "list" ],
+  "author": "Josemi Juanes <josemijuanes@gmail.com>",
+  "main": "./index.js",
+  "repository": { "type": "git", "url": "https://github.com/jmjuanes/keue" },
+  "dependencies": { },
+  "license": "MIT"
+}
