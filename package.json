@@ -1,7 +1,7 @@
 {
   "name": "keue",
   "version": "0.0.1",
-  "description": "Dead simple asynchronous function queue",
+  "description": "Dead simple asynchronous functions queue",
   "keywords": [ "queue", "asynchronous", "function", "functions", "list" ],
   "author": "Josemi Juanes <josemijuanes@gmail.com>",
   "main": "./index.js",
