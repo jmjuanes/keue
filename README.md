@@ -61,9 +61,13 @@ k.run();
 
 Initialize the queue.
 
-### k.then(function);
+### k.then(handler);
 
 Add a new function on the queue. This method accepts a function that will be added to the queue list.
+
+The provided function will be called with the following arguments:
+
+- `next`: a function that starts the next function on the queue.
 
 ### k.on(name, handler);
 
@@ -76,9 +80,25 @@ Add a new event listener, where:
 
 Emit the provided function if there was an error running the queue.
 
+```javascript
+k.on('error', function(message)
+{
+  //An error occurred
+  console.log(message);
+});
+```
+
 #### k.on('end', handler);
 
 Emit the provided function when the queue is completed.
+
+```javascript
+k.on('end', function()
+{
+  //End of the queue reached
+  //...
+});
+```
 
 ### k.run();
 
