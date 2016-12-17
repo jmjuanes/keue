@@ -7,6 +7,9 @@
 
 > Dead simple asynchronous functions queue
 
+[![npm](https://img.shields.io/npm/v/keue.svg?style=flat-square)](https://www.npmjs.com/package/keue)
+[![npm](https://img.shields.io/npm/dt/keue.svg?style=flat-square)](https://www.npmjs.com/package/keue)
+
 ## Install
 
 You can install the latest version of the package using **npm**:
