@@ -5,4 +5,83 @@
 
 # keue
 
-> Dead simple asynchronous function queue
+> Dead simple asynchronous functions queue
+
+## Install
+
+You can install the latest version of the package using **npm**:
+
+```
+$ npm install --save keue
+```
+
+## Usage
+
+```javascript
+//Import package
+var keue = require('keue');
+
+//Initialize the new queue
+var k = new keue();
+
+//Run a synchronous function
+k.then(function(next)
+{
+  //Do some stuff
+  //...
+
+  //Next function on the queue
+  return next();
+});
+
+//Run an asynchronous function
+k.then(function(next)
+{
+  //Call an asynchronous function
+  my_async_function(function()
+  {
+    //Do some stuff
+    //...
+
+    //Continue with the next function on the queue
+    return next();
+  });
+});
+
+//Run the queue
+k.run();
+```
+
+## API
+
+### var k = new keue();
+
+Initialize the queue.
+
+### k.then(function);
+
+Add a new function on the queue. This method accepts a function that will be added to the queue list.
+
+### k.on(name, handler);
+
+Add a new event listener, where:
+
+- `name`: event name.
+- `handler`: the function that will be called with the event.
+
+#### k.on('error', handler);
+
+Emit the provided function if there was an error running the queue.
+
+#### k.on('end', handler);
+
+Emit the provided function when the queue is completed.
+
+### k.run();
+
+Starts the queue.
+
+
+## License
+
+[MIT](./LICENSE) &copy; Josemi Juanes.
