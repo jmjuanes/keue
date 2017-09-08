@@ -20,34 +20,31 @@ var keue = function()
 util.inherits(keue, events.EventEmitter);
 
 //Add a new function
-keue.prototype.then = function(name, listener)
+keue.prototype.then = function(listener)
 {
   //Check the arguments
-  if(typeof name === 'function')
-  {
-    //Add the new function
-    this.list.push({ name: null, listener: name });
-  }
-  else if(typeof name === 'string' && typeof listener === 'function')
-  {
-    //Add the new function
-    this.list.push({ name: name, listener: listener });
-  }
-  else
+  if(typeof listener !== 'function')
   {
     //Throw a new error
     throw new Error('Invalid arguments in "keue.then" method');
   }
+
+  //Add the new function
+  this.list.push({ name: null, listener: listener });
 
   //Return this
   return this;
 };
 
 //Run the keue
-keue.prototype.run = function(cb)
+keue.prototype.run = function()
 {
   //Check the number of functions to execute
-  if(this.list.length === 0){ return; }
+  if(this.list.length === 0)
+  {
+    //Emit the finish event and exit
+    return this.emit('finish');
+  }
 
   //Save this
   var self = this;
@@ -76,14 +73,7 @@ keue.prototype.run = function(cb)
   var queue_done = function()
   {
     //Emit the finish event
-    self.emit('finish');
-
-    //Check the callback method
-    if(typeof cb === 'function')
-    {
-      //Call the provided callback
-      return cb();
-    }
+    return self.emit('finish');
   };
 
   //Initialize the queue
