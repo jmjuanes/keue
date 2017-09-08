@@ -61,44 +61,41 @@ k.run();
 
 Initialize the queue.
 
+### Event: 'error'
+
+The `error` event is emitted if the `next` function is called with an error object. 
+
+```javascript
+var k = new keue();
+
+k.on('error', function(error)
+{
+  //Do something with the error
+});
+
+k.then(function(next)
+{
+  // . . . 
+  
+  //Call the next method with an error object 
+  //This will stop the queue and emit the 'error' event
+  return next(new Error('Some error'));
+});
+
+k.run();
+```
+
+### Event: 'finish'
+
+This event is emitted when the queue is completed.
+
 ### k.then(handler);
 
 Add a new function on the queue. This method accepts a function that will be added to the queue list.
 
 The provided function will be called with the following arguments:
 
-- `next`: a function that starts the next function on the queue.
-
-### k.on(name, handler);
-
-Add a new event listener, where:
-
-- `name`: event name.
-- `handler`: the function that will be called with the event.
-
-#### k.on('error', handler);
-
-Emit the provided function if there was an error running the queue.
-
-```javascript
-k.on('error', function(message)
-{
-  //An error occurred
-  console.log(message);
-});
-```
-
-#### k.on('end', handler);
-
-Emit the provided function when the queue is completed.
-
-```javascript
-k.on('end', function()
-{
-  //End of the queue reached
-  //...
-});
-```
+- `next`: a function that starts the next function on the queue. If you call this function with an `Error` object, the queue will be finished and the `error` event will be emitted with the provided error object.
 
 ### k.run();
 
