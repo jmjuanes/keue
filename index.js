@@ -1,89 +1,94 @@
+//Import dependencies
+var util = require('util');
+var events = require("events");
+var utily = require('utily');
+
 //Keue object
 var keue = function()
 {
   //Initialize the functions list
-  this._list = [];
+  this.list = [];
 
-  //Events
-  this._events = {};
-
-  //Return this
-  return this;
-};
-
-//Emit an event
-keue.prototype.emit = function(name, message)
-{
-  //Check the event
-  if(typeof this._events[name] !== 'function'){ return this; }
-
-  //Emit the event
-  this._events[name](message);
-
-  //Continue
-  return this;
-};
-
-//Add a new event
-keue.prototype.on = function(name, listener)
-{
-  //Check the event name
-  if(typeof name !== 'string'){ return this; }
-
-  //Check the listener
-  if(typeof listener !== 'function'){ return this; }
-
-  //Add the event
-  this._events[name] = listener;
+  //Extend with the events emitter
+  events.EventEmitter.call(this);
 
   //Return this
   return this;
 };
+
+//Inherit from EventEmitter
+util.inherits(keue, events.EventEmitter);
 
 //Add a new function
-keue.prototype.then = function(listener)
+keue.prototype.then = function(name, listener)
 {
-  //Add the new function
-  this._list.push(listener);
+  //Check the arguments
+  if(typeof name === 'function')
+  {
+    //Add the new function
+    this.list.push({ name: null, listener: name });
+  }
+  else if(typeof name === 'string' && typeof listener === 'function')
+  {
+    //Add the new function
+    this.list.push({ name: name, listener: listener });
+  }
+  else
+  {
+    //Throw a new error
+    throw new Error('Invalid arguments in keue.then method');
+  }
 
   //Return this
   return this;
 };
 
 //Run the keue
-keue.prototype.run = function()
+keue.prototype.run = function(cb)
 {
   //Check the number of functions to execute
-  if(this._list.length === 0){ return this.emit('error', 'No functions to run'); }
+  if(this.list.length === 0){ return; }
+
+  //Save this
+  var self = this;
+
+  //queue list iterator
+  var queue_iterator = function(index, item, done)
+  {
+    //Call the listener method
+    return item.listener(function(error)
+    {
+      //Check the error object
+      if(typeof error === 'object' && error instanceof Error)
+      {
+        //Emit the error event and stop the queue
+        return self.emit('error', error);
+      }
+      else
+      {
+        //Continue with the next function in the queue
+        return done();
+      }
+    });
+  };
+
+  //Queue list done
+  var queue_done = function()
+  {
+    //Emit the finish event
+    self.emit('finish');
+
+    //Check the callback method
+    if(typeof cb === 'function')
+    {
+      //Call the provided callback
+      return cb();
+    }
+  };
 
   //Initialize the queue
-  return keue_recursive(this, 0);
+  return utily.eachAsync(this.list, queue_iterator, queue_done);
 };
 
-//Run the function recursive
-var keue_recursive = function(self, index)
-{
-  //Check the index
-  if(index >= self._list.length)
-  {
-    //Call the end event and exit
-    return self.emit('end', '');
-  }
-
-  //Call the function
-  self._list[index](function()
-  {
-    //Continue with the next function on the queue
-    return keue_recursive(self, index + 1);
-  });
-
-  //Return
-  return;
-};
-
-//Exports to node
-if(typeof module === "object" && module.exports)
-{
-  //Exports the keue object
-  module.exports = keue;
-}
+//Exports the keue object
+module.exports = keue;
