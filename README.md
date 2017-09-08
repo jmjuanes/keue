@@ -9,6 +9,7 @@
 
 [![npm](https://img.shields.io/npm/v/keue.svg?style=flat-square)](https://www.npmjs.com/package/keue)
 [![npm](https://img.shields.io/npm/dt/keue.svg?style=flat-square)](https://www.npmjs.com/package/keue)
+[![npm](https://img.shields.io/npm/l/keue.svg?style=flat-square)](https://github.com/jmjuanes/keue)
 
 ## Install
 
