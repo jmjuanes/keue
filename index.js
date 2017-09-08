@@ -36,7 +36,7 @@ keue.prototype.then = function(name, listener)
   else
   {
     //Throw a new error
-    throw new Error('Invalid arguments in keue.then method');
+    throw new Error('Invalid arguments in "keue.then" method');
   }
 
   //Return this
