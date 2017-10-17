@@ -47,7 +47,6 @@ describe('keue', function()
     k.then(function(next)
     {
       executed3 = true;
-      //This function will never be executed
       return done(new Error('Error'));
     });
 
