@@ -1,23 +1,32 @@
 //Import dependencies
-var util = require('util');
-var events = require("events");
 var utily = require('utily');
 
 //Keue object
-var keue = function()
+var keue = function(cb)
 {
+  //Check the cb method
+  if(typeof cb !== 'function')
+  {
+    //Throw a new error
+    throw new Error('No function provided on constructor method');
+  }
+
+  //Check the instance
+  if(!(this instanceof keue))
+  {
+    //Return a new instance of the keue method
+    return new keue(cb)
+  }
+
   //Initialize the functions list
   this.list = [];
 
-  //Extend with the events emitter
-  events.EventEmitter.call(this);
+  //Register the first method
+  this.list.push({ name: null, listener: cb });
 
   //Return this
   return this;
 };
-
-//Inherit from EventEmitter
-util.inherits(keue, events.EventEmitter);
 
 //Add a new function
 keue.prototype.then = function(listener)
@@ -36,30 +45,34 @@ keue.prototype.then = function(listener)
   return this;
 };
 
-//Run the keue
-keue.prototype.run = function()
+//Finish method -> Set the latest function and start the queue
+keue.prototype.finish = function(cb)
 {
+  //Check the latest callback method
+  if(typeof cb !== 'function')
+  {
+    //Throw the error
+    throw new Error('No latest function to run provided');
+  }
+
   //Check the number of functions to execute
   if(this.list.length === 0)
   {
-    //Emit the finish event and exit
-    return this.emit('finish');
+    //Call the latest function
+    return cb.call(null, null);
   }
-
-  //Save this
-  var self = this;
 
   //queue list iterator
   var queue_iterator = function(index, item, done)
   {
     //Call the listener method
-    return item.listener(function(error)
+    return item.listener.call(null, function(error)
     {
       //Check the error object
       if(typeof error === 'object' && error instanceof Error)
       {
-        //Emit the error event and stop the queue
-        return self.emit('error', error);
+        //Call the finish method with the error
+        return cb.call(null, error);
       }
       else
       {
@@ -72,8 +85,8 @@ keue.prototype.run = function()
   //Queue list done
   var queue_done = function()
   {
-    //Emit the finish event
-    return self.emit('finish');
+    //Call the finish function
+    return cb.call(null, null);
   };
 
   //Initialize the queue
