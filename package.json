@@ -2,7 +2,13 @@
   "name": "keue",
   "version": "0.0.4",
   "description": "Dead simple asynchronous functions queue",
-  "keywords": [ "queue", "asynchronous", "function", "functions", "list" ],
+  "keywords": [
+    "queue",
+    "asynchronous",
+    "function",
+    "functions",
+    "list"
+  ],
   "author": "Josemi Juanes <josemijuanes@gmail.com>",
   "main": "./index.js",
   "repository":
@@ -17,6 +23,10 @@
   "devDependencies":
   {
     "mocha": "^4.0.1"
+  },
+  "scripts":
+  {
+    "test": "./node_modules/.bin/mocha --reporter spec"
   },
   "license": "MIT"
 }
