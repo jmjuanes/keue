@@ -1,6 +1,6 @@
 {
   "name": "keue",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Dead simple asynchronous functions queue",
   "keywords": [
     "queue",
