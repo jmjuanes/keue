@@ -23,7 +23,7 @@ $ npm install --save keue
 
 ```javascript
 //Import package
-var keue = require('keue');
+var keue = require("keue");
 
 //Generate a new instance
 var tasks = new keue();
@@ -93,7 +93,7 @@ tasks.addTask("task1", function(done) {
     //by calling the next function with an error object 
     if(/* something went wrong */) {
         //Abort the task 
-        return done(new Error('Something went wrong'));
+        return done(new Error("Something went wrong"));
     } else {
         //Task completed without error
         return done();
@@ -111,7 +111,7 @@ tasks.removeTask("task4");
 
 ### tasks.run(tasks...);
 
-Start running the list of provided tasks. This methods accepts a string or an array of strings. The tasks will be executed in the order that you provide to the `tasks.run` method. For example, if you have three tasks (`task1`, `task2`, and `task3`) and you want to execute them in descendant order:
+Start running the list of provided tasks. This methods accepts a string or an array of strings with the names of the tasks to run. If no arguments ar passed, all tasks will be executed. The tasks will be executed in the order that you provide to the `tasks.run` method. For example, if you have three tasks (`task1`, `task2`, and `task3`) and you want to execute them in descendant order:
 
 ```javascript
 tasks.run("task3", "task2", "task1"); //First will be executed "task3", then "task2" and last "task1".
