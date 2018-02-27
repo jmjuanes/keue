@@ -111,10 +111,16 @@ tasks.removeTask("task4");
 
 ### tasks.run(tasks...);
 
-Start running the list of provided tasks. This methods accepts a string or an array of strings. The tasks will be executed in the order that you provide to the `tasks.run` method.
+Start running the list of provided tasks. This methods accepts a string or an array of strings. The tasks will be executed in the order that you provide to the `tasks.run` method. For example, if you have three tasks (`task1`, `task2`, and `task3`) and you want to execute them in descendant order:
 
 ```javascript
 tasks.run("task3", "task2", "task1"); //First will be executed "task3", then "task2" and last "task1".
+```
+
+Or: 
+
+```javascript
+tasks.run(["task3", "task2", "task1"]);
 ```
 
 This method will fire the `start` event. 
