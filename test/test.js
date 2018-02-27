@@ -25,7 +25,7 @@ describe("keue", function () {
         });
     });
 
-    it("should stop the queue when the keue.abort method is called", function (done) {
+    it("should stop the queue when a task emit an error", function (done) {
         var executed1 = false, executed2 = false, executed3 = false;
         var k = keue();
         k.addTask("task1", function (next) {
@@ -42,7 +42,6 @@ describe("keue", function () {
             executed3 = true;
             return done(new Error("ERROR"));
         });
-        k.run("task1", "task2", "task3");
         k.on("finish", function () {
             return done(new Error("ERROR"));
         });
@@ -53,6 +52,7 @@ describe("keue", function () {
             assert.equal(executed3, false);
             return done();
         });
+        k.run("task1", "task2", "task3");
     });
 
     it("should prevent executing a task twice", function (done) {
@@ -76,5 +76,41 @@ describe("keue", function () {
             return done(new Error("ERROR"));
         });
         k.run("task1", "task2", "task1")
+    });
+
+    it("should call all defined tasks in order", function (done) {
+        var executed1 = false, executed2 = false, executed3 = false;
+        var order = [];
+        var k = keue();
+        k.addTask("task1", function (next) {
+            executed1 = true;
+            return next();
+        });
+
+        k.addTask("task2", function (next) {
+            executed2 = true;
+            return next();
+        });
+
+        k.addTask("task3", function (next) {
+            executed3 = true;
+            return next();
+        });
+        k.on("task:start", function(name){
+            order.push(name.replace("task", ""));
+        });
+        k.on("finish", function () {
+            assert.equal(executed1, true);
+            assert.equal(executed2, true);
+            assert.equal(executed3, true);
+            assert.equal(order[0], "1");
+            assert.equal(order[1], "2");
+            assert.equal(order[2], "3");
+            return done();
+        });
+        k.on("error", function () {
+            return done(new Error("ERROR"))
+        });
+        k.run();
     });
 });
