@@ -35,20 +35,19 @@ describe("keue", function () {
 
         k.addTask("task2", function (next) {
             executed2 = true;
-            k.abort();
-            return next();
+            return next(new Error("Aborting task"));
         });
 
         k.addTask("task3", function (next) {
             executed3 = true;
-            return done(new Error("Error"));
+            return done(new Error("ERROR"));
         });
         k.run("task1", "task2", "task3");
         k.on("finish", function () {
-            return done(new Error("Error"));
+            return done(new Error("ERROR"));
         });
-        k.on("abort", function () {
-            //assert.notEqual(error, null);
+        k.on("error", function (error) {
+            assert.notEqual(error, null);
             assert.equal(executed1, true);
             assert.equal(executed2, true);
             assert.equal(executed3, false);
@@ -67,13 +66,14 @@ describe("keue", function () {
             executed2 = true;
             return next();
         });
-        k.on("task:error", function(status){
-            assert.equal(status.task, "task1");
+        k.on("error", function(error){
+            assert.notEqual(error, null);
             assert.equal(executed1, true);
             assert.equal(executed2, true);
-        });
-        k.on("abort", function(){
             return done();
+        });
+        k.on("finish", function(){
+            return done(new Error("ERROR"));
         });
         k.run("task1", "task2", "task1")
     });
