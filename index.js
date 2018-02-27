@@ -90,7 +90,7 @@ Keue.prototype.run = function () {
             return self.emit("error", new Error("Task '" + tasks[index] + "' not found"));
         }
         //Check if the task has already executed
-        if(task.done === true) {
+        if (task.done === true) {
             self._running = false;
             return self.emit("error", new Error("Task '" + task.name + "' has been already completed"));
         }
@@ -98,7 +98,7 @@ Keue.prototype.run = function () {
         self.emit("task:start", task.name);
         return task.listener.call(null, function (error) {
             //Check for error running the task
-            if(error) {
+            if (error) {
                 self._running = false;
                 return self.emit("error", error);
             }
@@ -113,7 +113,11 @@ Keue.prototype.run = function () {
     };
     this._running = true;
     this.emit("start");
-    runTask(0);
+    process.nextTick(function () {
+        //Initialize the task queue in the next tick. This prevents errors
+        //when the event listeners are defined after executing the run method
+        return runTask(0);
+    });
     return this;
 };
 
