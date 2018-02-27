@@ -57,15 +57,13 @@ tasks.addTask("task2", function (done) {
 
 //Finish listener
 k.on("finish", function () {
-  //Tasks finished
+  //Tasks finished successfully
   //...
 });
 
 //Task error listener 
-k.on("task:error", function (info) {
-    //Error running the task info.name
-    //The error object is stored in info.error
-    //...
+k.on("error", function (error) {
+    //Error running a task
 });
 
 //Run the tasks 
@@ -86,7 +84,7 @@ var tasks = new keue();
 
 Register a new task called `name`. The second argument is a function that will be called with the following arguments:
 
-- `done`: a function that should be called when the task is completed. If you call this function with an `Error` object, the tasks queue will be finished and the `task:error` and `abort` events will be triggered.
+- `done`: a function that should be called when the task is completed. If you call this function with an `Error` object, the tasks queue will be finished and the `error` event will be triggered.
 
 ````javascript
 //Add a new task to the queue
@@ -121,9 +119,6 @@ tasks.run("task3", "task2", "task1"); //First will be executed "task3", then "ta
 
 This method will fire the `start` event. 
 
-### tasks.abort() 
-
-Abort the in progress tasks queue. This method will fire the `abort` event.
 
 ### tasks.on(eventName, eventListener)
 
@@ -149,12 +144,12 @@ tasks.on("finish", function () {
 });
 ```
 
-#### event abort
+#### event error
 
-fired when the tasks queue was aborted due to a task error or when the `tasks.abort()` method is called.
+Fired when the tasks queue was aborted due to a task error.
 
 ```javascript
-tasks.on("abort", function () {
+tasks.on("error", function (error) {
     //Tasks aborted
 });
 ```
@@ -164,8 +159,8 @@ tasks.on("abort", function () {
 Fired when a task was started.
 
 ```javascript
-tasks.on("task:start", function (info) {
-    console.log("Task " + info.name + " started");
+tasks.on("task:start", function (name) {
+    console.log("Task " + name + " started");
 });
 ```
 
@@ -174,22 +169,10 @@ tasks.on("task:start", function (info) {
 Fired when a task was completed without error. 
 
 ```javascript
-tasks.on("task:end", function (info) {
-    console.log("Task " + info.name + " completed after " + info.time);
+tasks.on("task:end", function (name) {
+    console.log("Task " + name + " completed!");
 });
 ```
-
-#### event task:error 
-
-Fired when the task produced an error.
-
-```javascript
-tasks.on("task:error", function (info) {
-    console.log("Task " + info.name + " exited with error " + info.message);
-    //The error object is stored in info.error
-});
-```
-
 
 
 ## License
