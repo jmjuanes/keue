@@ -31,7 +31,7 @@ Keue.prototype.addTask = function (name, listener) {
         throw new Error("Task '" + name + "' requires a function");
     }
     //Register this task
-    this._tasks[name] = {name: name, listener: listener, start: null, end: null};
+    this._tasks[name] = {name: name, listener: listener, start: null, end: null, done: false};
     return this;
 };
 
@@ -89,17 +89,26 @@ Keue.prototype.run = function () {
         let task = self._tasks[tasks[index]];
         //Check for not found task
         if (typeof task !== "object" || task === null) {
-            //Emit the task not found error
+            //Emit the task error event and abort the tasks
             let error = new Error("Task '" + tasks[index] + "' not found");
             self.emit("task:error", {task: tasks[index], error: error, message: "Task not found"});
-            return process.nextTick(function () {
-                //Continue with the next task in the queue
-                return runTask(index + 1);
-            });
+            return self.abort();
+        }
+        //Check if the task has already executed
+        if(task.done === true) {
+            let error = new Error("Task '" + task.name + "' has been already completed");
+            self.emit("task:error", {task: task.name, error: error, message: "Task already completed"});
+            return self.abort();
         }
         task.start = Date.now();
         self.emit("task:start", {task: task.name});
-        return task.listener.call(null, function () {
+        return task.listener.call(null, function (error) {
+            if(error) {
+                //Emit the task error event
+                let error = new Error("Error running task '" + tasks[index] + "'");
+                self.emit("task:error", {task: task.name, error: error, message: "Error running task"});
+                return self.abort();
+            }
             //Check if the tasks queue has been aborted
             if (self._running === false) {
                 return;
@@ -118,14 +127,11 @@ Keue.prototype.run = function () {
 };
 
 //Abort the tasks queue
-Keue.prototype.abort = function (error) {
-    //Check the error object
-    if(!error) {
-        error = null;
-    }
+Keue.prototype.abort = function () {
     if (this._running === true) {
+        //Stop the queue and emit the abort event
         this._running = false;
-        this.emit("abort", error);
+        this.emit("abort");
     }
 };
 
