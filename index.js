@@ -95,7 +95,7 @@ Keue.prototype.run = function () {
             return self.emit("error", new Error("Task '" + task.name + "' has been already completed"));
         }
         //task.start = Date.now();
-        self.emit("task:start", task: task.name);
+        self.emit("task:start", task.name);
         return task.listener.call(null, function (error) {
             //Check for error running the task
             if(error) {
