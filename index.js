@@ -125,6 +125,7 @@ Keue.prototype.run = function () {
     this._running = true;
     this.emit("start");
     runTask(0);
+    return this;
 };
 
 //Abort the tasks queue
@@ -134,6 +135,7 @@ Keue.prototype.abort = function () {
         this._running = false;
         this.emit("abort");
     }
+    return this;
 };
 
 module.exports = Keue;
