@@ -35,7 +35,7 @@ describe("keue", function () {
 
         k.addTask("task2", function (next) {
             executed2 = true;
-            k.abort(new Error("Something went wrong"));
+            k.abort();
             return next();
         });
 
@@ -44,15 +44,37 @@ describe("keue", function () {
             return done(new Error("Error"));
         });
         k.run("task1", "task2", "task3");
-        k.on("finish", function() {
+        k.on("finish", function () {
             return done(new Error("Error"));
         });
-        k.on("abort", function (error) {
-            assert.notEqual(error, null);
+        k.on("abort", function () {
+            //assert.notEqual(error, null);
             assert.equal(executed1, true);
             assert.equal(executed2, true);
             assert.equal(executed3, false);
             return done();
         });
+    });
+
+    it("should prevent executing a task twice", function (done) {
+        var executed1 = false, executed2 = false;
+        var k = new keue();
+        k.addTask("task1", function(next){
+            executed1 = true;
+            return next();
+        });
+        k.addTask("task2", function(next){
+            executed2 = true;
+            return next();
+        });
+        k.on("task:error", function(status){
+            assert.equal(status.task, "task1");
+            assert.equal(executed1, true);
+            assert.equal(executed2, true);
+        });
+        k.on("abort", function(){
+            return done();
+        });
+        k.run("task1", "task2", "task1")
     });
 });
