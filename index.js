@@ -89,7 +89,9 @@ Keue.prototype.run = function () {
         let task = self._tasks[tasks[index]];
         //Check for not found task
         if (typeof task !== "object" || task === null) {
-            self.emit("task:not-found", {task: tasks[index]});
+            //Emit the task not found error
+            let error = new Error("Task '" + tasks[index] + "' not found");
+            self.emit("task:error", {task: tasks[index], error: error, message: "Task not found"});
             return process.nextTick(function () {
                 //Continue with the next task in the queue
                 return runTask(index + 1);
