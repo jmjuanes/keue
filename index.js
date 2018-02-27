@@ -1,97 +1,130 @@
-//Import dependencies
-var utily = require('utily');
+let EventEmitter = require("events").EventEmitter;
+let util = require("util");
 
 //Keue object
-var keue = function(cb)
-{
-  //Check the cb method
-  if(typeof cb !== 'function')
-  {
-    //Throw a new error
-    throw new Error('No function provided on constructor method');
-  }
-
-  //Check the instance
-  if(!(this instanceof keue))
-  {
-    //Return a new instance of the keue method
-    return new keue(cb)
-  }
-
-  //Initialize the functions list
-  this.list = [];
-
-  //Register the first method
-  this.list.push({ name: null, listener: cb });
-
-  //Return this
-  return this;
+let Keue = function (options) {
+    if (typeof options !== "object" || options === null) {
+        let options = {};
+    }
+    if (!(this instanceof Keue)) {
+        //Return a new instance of the keue method
+        return new Keue(options)
+    }
+    EventEmitter.call(this); //Extend the events class
+    this._tasks = {}; //Tasks list
+    this._running = false; //Tasks are running
+    return this;
 };
 
-//Add a new function
-keue.prototype.then = function(listener)
-{
-  //Check the arguments
-  if(typeof listener !== 'function')
-  {
-    //Throw a new error
-    throw new Error('Invalid arguments in "keue.then" method');
-  }
+//Inherit methods from EventListener class
+util.inherits(Keue, EventEmitter);
 
-  //Add the new function
-  this.list.push({ name: null, listener: listener });
-
-  //Return this
-  return this;
+//Register a new task
+Keue.prototype.addTask = function (name, listener) {
+    if (typeof name !== "string") {
+        throw new Error("Task requires a name");
+    }
+    if (name.trim().length === 0) {
+        throw new Error("Task name has to be a non-empty string");
+    }
+    if (typeof listener !== "function") {
+        throw new Error("Task '" + name + "' requires a function");
+    }
+    //Register this task
+    this._tasks[name] = {name: name, listener: listener, start: null, end: null};
+    return this;
 };
 
-//Finish method -> Set the latest function and start the queue
-keue.prototype.finish = function(cb)
-{
-  //Check the latest callback method
-  if(typeof cb !== 'function')
-  {
-    //Throw the error
-    throw new Error('No latest function to run provided');
-  }
+//Check if the provided task has been defined
+Keue.prototype.hasTask = function (name) {
+    return typeof this._tasks[name] === "object";
+};
 
-  //Check the number of functions to execute
-  if(this.list.length === 0)
-  {
-    //Call the latest function
-    return cb.call(null, null);
-  }
+//Remove the task
+Keue.prototype.removeTask = function (name) {
+    if (this.hasTask(name) === true) {
+        delete this._tasks[name];
+    }
+    return this;
+};
 
-  //queue list iterator
-  var queue_iterator = function(index, item, done)
-  {
-    //Call the listener method
-    return item.listener.call(null, function(error)
-    {
-      //Check the error object
-      if(typeof error === 'object' && error instanceof Error)
-      {
-        //Call the finish method with the error
-        return cb.call(null, error);
-      }
-      else
-      {
-        //Continue with the next function in the queue
-        return done();
-      }
+//Start the tasks
+Keue.prototype.run = function () {
+    let self = this;
+    let tasks = [];
+    //Check if the queue is already running
+    if (this._running === true) {
+        return;
+    }
+    //Check the current number of tasks
+    if (Object.keys(this._tasks).length === 0) {
+        throw new Error("Empty tasks list");
+    }
+    //Parse all the arguments
+    Array.prototype.slice.call(arguments, 0).forEach(function (arg) {
+        if (typeof arg === "string") {
+            tasks.push(arg);
+        } else if (Array.isArray(arg) === true) {
+            tasks = tasks.concat(arg);
+        } else {
+            throw new Error("Invalid task name provided");
+        }
     });
-  };
-
-  //Queue list done
-  var queue_done = function()
-  {
-    //Call the finish function
-    return cb.call(null, null);
-  };
-
-  //Initialize the queue
-  return utily.eachAsync(this.list, queue_iterator, queue_done);
+    if (tasks.length < 1) {
+        //Run all tasks
+        Object.keys(this._tasks).forEach(function (name) {
+            tasks.push(name);
+        });
+    }
+    //Run a task
+    let runTask = function (index) {
+        //Check if the tasks queue has been aborted
+        if (self._running === false) {
+            return;
+        }
+        if (index >= tasks.length) {
+            //Tasks finished
+            return self.emit("finish");
+        }
+        let task = self._tasks[tasks[index]];
+        //Check for not found task
+        if (typeof task !== "object" || task === null) {
+            self.emit("task:not-found", {task: tasks[index]});
+            return process.nextTick(function () {
+                //Continue with the next task in the queue
+                return runTask(index + 1);
+            });
+        }
+        task.start = Date.now();
+        self.emit("task:start", {task: task.name});
+        return task.listener.call(null, function () {
+            //Check if the tasks queue has been aborted
+            if (self._running === false) {
+                return;
+            }
+            task.end = Date.now();
+            self.emit("task:end", {task: task.name, time: task.end - task.start});
+            return process.nextTick(function () {
+                //Continue with the next task in the queue
+                return runTask(index + 1);
+            });
+        });
+    };
+    this._running = true;
+    this.emit("start");
+    runTask(0);
 };
 
-//Exports the keue object
-module.exports = keue;
+//Abort the tasks queue
+Keue.prototype.abort = function (error) {
+    //Check the error object
+    if(!error) {
+        error = null;
+    }
+    if (this._running === true) {
+        this._running = false;
+        this.emit("abort", error);
+    }
+};
+
+module.exports = Keue;
