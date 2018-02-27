@@ -114,6 +114,7 @@ Keue.prototype.run = function () {
                 return;
             }
             task.end = Date.now();
+            task.done = true;
             self.emit("task:end", {task: task.name, time: task.end - task.start});
             return process.nextTick(function () {
                 //Continue with the next task in the queue
