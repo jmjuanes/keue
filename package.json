@@ -7,7 +7,10 @@
     "asynchronous",
     "function",
     "functions",
-    "list"
+    "list",
+    "tasks",
+    "task",
+    "orchestration"
   ],
   "author": "Josemi Juanes <josemijuanes@gmail.com>",
   "main": "./index.js",
