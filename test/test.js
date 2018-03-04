@@ -58,22 +58,27 @@ describe("keue", function () {
     it("should prevent executing a task twice", function (done) {
         var executed1 = false, executed2 = false;
         var k = new keue();
-        k.addTask("task1", function(next){
+        k.addTask("task1", function (next) {
+            if (executed1 === true) {
+                return done(new Error("Running a finished task"));
+            }
             executed1 = true;
             return next();
         });
-        k.addTask("task2", function(next){
+        k.addTask("task2", function (next) {
+            if (executed2 === true) {
+                return done(new Error("Running a finished task"));
+            }
             executed2 = true;
             return next();
         });
-        k.on("error", function(error){
-            assert.notEqual(error, null);
+        k.on("error", function (error) {
+            return done(error);
+        });
+        k.on("finish", function () {
             assert.equal(executed1, true);
             assert.equal(executed2, true);
             return done();
-        });
-        k.on("finish", function(){
-            return done(new Error("ERROR"));
         });
         k.run("task1", "task2", "task1")
     });
@@ -96,7 +101,7 @@ describe("keue", function () {
             executed3 = true;
             return next();
         });
-        k.on("task:start", function(name){
+        k.on("task:start", function (name) {
             order.push(name.replace("task", ""));
         });
         k.on("finish", function () {
@@ -112,5 +117,45 @@ describe("keue", function () {
             return done(new Error("ERROR"))
         });
         k.run();
+    });
+
+    it("should execute all task dependencies before running the wanted task", function (done) {
+        let executed1 = false, executed2 = false, executed3 = false, executed4 = false;
+        let order = [];
+        let k = new keue();
+        k.addTask("task1", function(next){
+            executed1 = true;
+            return next();
+        });
+        k.addTask("task2", "task1", function(next){
+            executed2 = true;
+            return next();
+        });
+        k.addTask("task3", function(next){
+            executed3 = true;
+            return next();
+        });
+        k.addTask("task4", ["task3", "task2", "task1"], function(next){
+            executed4 = true;
+            return next();
+        });
+        k.on("task:start", function (name) {
+            order.push(name.replace("task", ""));
+        });
+        k.on("finish", function(){
+            assert.equal(executed1, true);
+            assert.equal(executed2, true);
+            assert.equal(executed3, true);
+            assert.equal(executed4, true);
+            assert.equal(order[0], "3");
+            assert.equal(order[1], "1");
+            assert.equal(order[2], "2");
+            assert.equal(order[3], "4");
+            return done();
+        });
+        k.on("error", function () {
+            return done(new Error("ERROR"))
+        });
+        k.run("task4");
     });
 });
