@@ -1,6 +1,8 @@
 let EventEmitter = require("events").EventEmitter;
 let util = require("util");
 
+let buildSequence = require("./lib/sequence.js");
+
 //Keue object
 let Keue = function (options) {
     if (typeof options !== "object" || options === null) {
@@ -24,7 +26,11 @@ Keue.prototype.on = function (name, listener) {
 };
 
 //Register a new task
-Keue.prototype.addTask = function (name, listener) {
+Keue.prototype.addTask = function (name, dependencies, listener) {
+    if (!listener && typeof dependencies === "function") {
+        listener = dependencies;
+        dependencies = [];
+    }
     if (typeof name !== "string") {
         throw new Error("Task requires a name");
     }
@@ -34,8 +40,15 @@ Keue.prototype.addTask = function (name, listener) {
     if (typeof listener !== "function") {
         throw new Error("Task '" + name + "' requires a function");
     }
+    if (Array.isArray(dependencies) === false) {
+        if (typeof dependencies === "string") {
+            dependencies = [dependencies];
+        } else {
+            throw new Error("Dependencies should be a string or an array of strings");
+        }
+    }
     //Register this task
-    this._tasks[name] = {name: name, listener: listener, done: false};
+    this._tasks[name] = {name: name, dependencies: dependencies, listener: listener, done: false};
     return this;
 };
 
@@ -55,7 +68,7 @@ Keue.prototype.removeTask = function (name) {
 //Start the tasks
 Keue.prototype.run = function () {
     let self = this;
-    let tasks = [];
+    let names = [];
     //Check if the queue is already running
     if (this._running === true) {
         return;
@@ -67,31 +80,33 @@ Keue.prototype.run = function () {
     //Parse all the arguments
     Array.prototype.slice.call(arguments, 0).forEach(function (arg) {
         if (typeof arg === "string") {
-            tasks.push(arg);
+            names.push(arg);
         } else if (Array.isArray(arg) === true) {
-            tasks = tasks.concat(arg);
+            names = names.concat(arg);
         } else {
             throw new Error("Invalid task name provided");
         }
     });
-    if (tasks.length < 1) {
+    if (names.length < 1) {
         //Run all tasks
         Object.keys(this._tasks).forEach(function (name) {
-            tasks.push(name);
+            names.push(name);
         });
     }
+    //Generate the correct sequence of tasks
+    let sequence = buildSequence(this._tasks, names);
     //Run a task
     let runTask = function (index) {
-        if (index >= tasks.length) {
+        if (index >= sequence.length) {
             //Tasks finished
             self._running = false;
             return self._events.emit("finish");
         }
-        let task = self._tasks[tasks[index]];
+        let task = self._tasks[sequence[index]];
         //Check for not found task
         if (typeof task !== "object" || task === null) {
             self._running = false;
-            return self._events.emit("error", new Error("Task '" + tasks[index] + "' not found"));
+            return self._events.emit("error", new Error("Task '" + sequence[index] + "' not found"));
         }
         //Check if the task has already executed
         if (task.done === true) {
