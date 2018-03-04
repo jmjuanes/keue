@@ -10,14 +10,18 @@ let Keue = function (options) {
         //Return a new instance of the keue method
         return new Keue(options)
     }
-    EventEmitter.call(this); //Extend the events class
+    //EventEmitter.call(this); //Extend the events class
     this._tasks = {}; //Tasks list
     this._running = false; //Tasks are running
+    this._events = new EventEmitter(); //Event emitter
     return this;
 };
 
-//Inherit methods from EventListener class
-util.inherits(Keue, EventEmitter);
+//Register a new event listener
+Keue.prototype.on = function (name, listener) {
+    this._events.on(name, listener);
+    return this;
+};
 
 //Register a new task
 Keue.prototype.addTask = function (name, listener) {
@@ -81,30 +85,30 @@ Keue.prototype.run = function () {
         if (index >= tasks.length) {
             //Tasks finished
             self._running = false;
-            return self.emit("finish");
+            return self._events.emit("finish");
         }
         let task = self._tasks[tasks[index]];
         //Check for not found task
         if (typeof task !== "object" || task === null) {
             self._running = false;
-            return self.emit("error", new Error("Task '" + tasks[index] + "' not found"));
+            return self._events.emit("error", new Error("Task '" + tasks[index] + "' not found"));
         }
         //Check if the task has already executed
         if (task.done === true) {
             self._running = false;
-            return self.emit("error", new Error("Task '" + task.name + "' has been already completed"));
+            return self._events.emit("error", new Error("Task '" + task.name + "' has been already completed"));
         }
         //task.start = Date.now();
-        self.emit("task:start", task.name);
+        self._events.emit("task:start", task.name);
         return task.listener.call(null, function (error) {
             //Check for error running the task
             if (error) {
                 self._running = false;
-                return self.emit("error", error);
+                return self._events.emit("error", error);
             }
             //task.end = Date.now();
             task.done = true;
-            self.emit("task:end", task.name);
+            self._events.emit("task:end", task.name);
             return process.nextTick(function () {
                 //Continue with the next task in the queue
                 return runTask(index + 1);
@@ -112,7 +116,7 @@ Keue.prototype.run = function () {
         });
     };
     this._running = true;
-    this.emit("start");
+    this._events.emit("start");
     process.nextTick(function () {
         //Initialize the task queue in the next tick. This prevents errors
         //when the event listeners are defined after executing the run method
