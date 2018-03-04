@@ -4,13 +4,10 @@ let util = require("util");
 let buildSequence = require("./lib/sequence.js");
 
 //Keue object
-let Keue = function (options) {
-    if (typeof options !== "object" || options === null) {
-        let options = {};
-    }
+let Keue = function () {
     if (!(this instanceof Keue)) {
         //Return a new instance of the keue method
-        return new Keue(options)
+        return new Keue()
     }
     //EventEmitter.call(this); //Extend the events class
     this._tasks = {}; //Tasks list
