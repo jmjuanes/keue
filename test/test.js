@@ -158,4 +158,18 @@ describe("keue", function () {
         });
         k.run("task4");
     });
+    it("should emit an error if recursive tasks are found", function(done){
+        let k = new keue();
+        k.addTask("task1", "task2", function(){
+            return done(new Error("ERROR"));
+        });
+        k.addTask("task2", "task1", function(){
+            return done(new Error("ERROR"));
+        });
+        try{
+            k.run();
+        } catch(error) {
+            return done();
+        }
+    });
 });
