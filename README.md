@@ -80,9 +80,11 @@ Initialize tasks manager.
 var tasks = new keue();
 ```
 
-### tasks.addTask(name, handler);
+### tasks.addTask(name\[, dependencies\], handler);
 
-Register a new task called `name`. The second argument is a function that will be called with the following arguments:
+Register a new task called `name`. You can optionally provide list of `dependencies` tasks to be executed and completed before this task is executed.
+
+The last argument should be a function that will be called with the following arguments:
 
 - `done`: a function that should be called when the task is completed. If you call this function with an `Error` object, the tasks queue will be finished and the `error` event will be triggered.
 
@@ -98,6 +100,13 @@ tasks.addTask("task1", function(done) {
         //Task completed without error
         return done();
     }
+});
+
+//Add a new task with dependencies 
+tasks.addTask("task2", ["task1"], function(done) {
+    //task1 will be completed before this task is executed
+    //Do your magic
+    //...
 });
 ````
 
